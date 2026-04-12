@@ -1,0 +1,90 @@
+# ============================================================
+#  metrics.yaml  —  Semantic Layer / Metric Dictionary
+#  This is YOUR key differentiator. Every term a user might
+#  type gets resolved to the exact column + filter + formula.
+# ============================================================
+
+metrics:
+
+  revenue:
+    column: revenue
+    description: Total monetary value of completed transactions
+    aggregation: sum
+    filters: "status == 'completed'"
+    unit: GBP
+    aliases: [sales, income, earnings, turnover]
+
+  total_revenue:
+    column: revenue
+    description: Sum of all revenue regardless of status
+    aggregation: sum
+    filters: null
+    unit: GBP
+    aliases: [gross revenue, total sales]
+
+  units_sold:
+    column: units_sold
+    description: Number of product units sold
+    aggregation: sum
+    filters: "status == 'completed'"
+    unit: units
+    aliases: [quantity, volume, units, items sold]
+
+  average_order_value:
+    column: revenue
+    description: Average revenue per completed transaction
+    aggregation: mean
+    filters: "status == 'completed'"
+    unit: GBP
+    aliases: [aov, avg order, average sale]
+
+  refund_rate:
+    column: status
+    description: Percentage of transactions that were refunded
+    formula: "(status == 'refunded').sum() / len(df) * 100"
+    unit: percent
+    aliases: [returns, refunds, return rate]
+
+  transaction_count:
+    column: status
+    description: Number of completed transactions
+    aggregation: count
+    filters: "status == 'completed'"
+    unit: count
+    aliases: [orders, transactions, number of sales]
+
+
+dimensions:
+
+  region:
+    column: region
+    description: Geographic sales region
+    values: [North, South, East, West]
+    aliases: [area, geography, location, zone]
+
+  channel:
+    column: channel
+    description: Sales channel through which the transaction occurred
+    values: [Retail, Online, Wholesale]
+    aliases: [medium, route, platform]
+
+  product:
+    column: product
+    description: Product sold
+    aliases: [item, sku, product name]
+
+  date:
+    column: date
+    description: Transaction date
+    aliases: [time, day, when]
+
+
+# Time resolution helpers — the agent uses these to
+# resolve ambiguous phrases like "this month" or "last week"
+time_expressions:
+  this_month: "current calendar month"
+  last_month: "previous calendar month"
+  this_week: "current Mon–Sun week"
+  last_week: "previous Mon–Sun week"
+  this_quarter: "current Q (Jan–Mar, Apr–Jun, Jul–Sep, Oct–Dec)"
+  ytd: "year to date from Jan 1"

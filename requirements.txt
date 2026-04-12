@@ -1,0 +1,24 @@
+# Core
+fastapi
+uvicorn[standard]
+python-multipart
+pydantic
+# Data
+pandas
+numpy
+openpyxl
+
+# LangChain + Gemini
+langchain
+langchain-core
+langchain-google-genai
+# Data Science
+scikit-learn
+statsmodels
+python-dateutil
+
+# Config
+pyyaml
+python-dotenv
+
+matplotlib
