@@ -12,6 +12,9 @@ openpyxl
 langchain
 langchain-core
 langchain-google-genai
+langchain-community
+sqlalchemy
+mysql-connector-python
 # Data Science
 scikit-learn
 statsmodels
@@ -22,3 +25,10 @@ pyyaml
 python-dotenv
 
 matplotlib
+SQLAlchemy
+validators
+langserve
+pymongo
+pymysql
+passlib[bcrypt]
+python-jose

@@ -17,6 +17,7 @@ class Session:
         self.df: pd.DataFrame | None = None
         self.filename: str            = ""
         self.history: list[dict]      = []   # [{role, content, timestamp}]
+        self.db_history: list[dict]   = []   # SQL chat history for /db/chat
         self.last_chart_b64: str | None = None
         self.created_at               = datetime.now(UTC)
 
@@ -35,6 +36,19 @@ class Session:
     def get_history_text(self, last_n: int = 6) -> str:
         """Last N messages as a formatted string for the LLM prompt."""
         msgs = self.history[-last_n:]
+        return "\n".join(f"{m['role'].upper()}: {m['content']}" for m in msgs)
+
+    def add_db_message(self, role: str, content: str, max_messages: int = 10):
+        self.db_history.append({
+            "role": role,
+            "content": content,
+            "timestamp": datetime.now(UTC).isoformat(),
+        })
+        if len(self.db_history) > max_messages:
+            self.db_history = self.db_history[-max_messages:]
+
+    def get_db_history_text(self, last_n: int = 8) -> str:
+        msgs = self.db_history[-last_n:]
         return "\n".join(f"{m['role'].upper()}: {m['content']}" for m in msgs)
 
     def has_data(self) -> bool:

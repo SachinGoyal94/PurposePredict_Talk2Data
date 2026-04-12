@@ -1,265 +1,255 @@
-# Talk to Data — Seamless Self-Service Intelligence
+# 🗣️ Talk to Data + Database Speaks
 
-A conversational data analyst system that lets anyone ask plain-English questions about their data and instantly receive clear explanations, verified insights, and transparent source references — no SQL, no dashboards, no data skills required.
+[![FastAPI](https://img.shields.io/badge/FastAPI-005571?style=for-the-badge&logo=fastapi)](https://fastapi.tiangolo.com/)
+[![Python 3.10+](https://img.shields.io/badge/Python-3.10%2B-blue?style=for-the-badge&logo=python)](https://www.python.org/)
+[![Docker support](https://img.shields.io/badge/Docker-Ready-2496ED?style=for-the-badge&logo=docker)](https://www.docker.com/)
+[![License](https://img.shields.io/badge/License-Apache_2.0-yellow.svg?style=for-the-badge)](https://opensource.org/licenses/Apache-2.0)
+
+A powerful, conversational analytics system that empowers anyone to ask plain-English questions about uploaded datasets (CSV/Excel) or live SQL databases and receive clear, actionable answers along with auto-generated charts.
 
 Built for the **NatWest Group Code for Purpose – India Hackathon**.
 
 ---
 
-## Overview
+## 📖 Overview
 
-Many people struggle to get quick, accurate, and trustworthy answers from data. They face too many steps, unclear terminology, and no confidence in the results.
+Many people struggle to get quick, accurate, and trustworthy answers from their data. They face too many steps, confusing terminology, and lack of confidence in the results context.
 
-**Talk to Data** removes that friction. Upload any CSV or Excel file, ask a question the way you would ask a colleague, and get back a plain-English answer with a chart and a reference to exactly which columns and filters produced it.
+**Talk to Data + Database Speaks** eliminates that friction. Whether you upload a CSV/Excel file or connect directly to a production MySQL database, you can simply ask a question the way you would ask a colleague. In return, you get:
+- A plain-English answer summarizing the findings.
+- An auto-generated visual chart (when applicable).
+- A transparent reference indicating exactly which columns and filters produced the result.
 
-The system is built around a **multi-agent data analyst pipeline** that understands business terminology, resolves ambiguous time expressions, detects anomalies, forecasts trends, and segments data — all without exposing raw or sensitive data.
+The system is built around a **multi-agent data analyst pipeline** that understands business terminology, resolves ambiguous time expressions, detects anomalies, forecasts trends, segments data, and translates text to SQL — all seamlessly and safely.
 
-**Intended users:** Non-technical business users, analysts, and team leads who need fast, trustworthy answers from data without learning SQL or writing code.
-
----
-
-## Features
-
-- **Natural language querying** — ask questions exactly as you would say them
-- **Intent classification** — automatically routes to the right analysis (compare, breakdown, what changed, summarise)
-- **Semantic layer** — `metrics.yaml` maps business terms like "revenue" or "churn" to exact column definitions, ensuring consistent results across all queries
-- **Source transparency** — every answer shows which columns and filters produced it
-- **Ambiguity resolution** — "this month" and "last week" are resolved to concrete date ranges before analysis
-- **Data Science agents** — anomaly detection (Z-score, IQR, Isolation Forest), time-series forecasting (ARIMA), and customer segmentation (KMeans)
-- **Auto chart selection** — picks the right chart type (bar, line, scatter, pie) based on the result shape
-- **PII safety layer** — raw sensitive data (customer IDs, emails) is never exposed to the LLM or returned to the user
-- **Code safety guard** — all LLM-generated Python code is scanned for dangerous patterns before execution
-- **Self-service dataset upload** — works with any CSV or Excel file, not just a hardcoded demo
-- **Session management** — follow-up questions maintain context from the conversation history
-- **LLM-agnostic** — works with OpenAI, Google Gemini, or a local Ollama model
+**Intended users:** Non-technical business users, analysts, and team leads who need fast, trustworthy answers from data without learning SQL, Python, or writing complex queries.
 
 ---
 
-## Tech stack
+## ✨ Key Features
 
-- **Python 3.10+**
-- **FastAPI** — REST API backend
-- **ai-data-science-team** — open-source agent library (MIT licence) used as the Pandas analyst engine
-- **LangChain** — LLM abstraction layer
-- **Pandas / NumPy** — data processing
-- **scikit-learn** — anomaly detection (Isolation Forest) and clustering (KMeans)
-- **statsmodels** — time-series forecasting (ARIMA)
-- **PyYAML** — semantic layer configuration
-- **React** (frontend) — chat interface and chart rendering
-- **Plotly** (frontend) — auto-generated charts
+- 🧠 **Natural Language Querying** — Ask questions exactly as you would say them.
+- 🔀 **Dual Chat Modes**:
+  - **Dataset Mode (`/upload` + `/query`)**: Talk dynamically to any uploaded CSV or Excel file via an intelligent Python/Pandas agent.
+  - **SQL Mode (`/db/chat`)**: Talk directly to your live MySQL databases using a specialized, stateful LangChain SQL agent.
+- 🎯 **Intent Classification** — Automatically routes questions to the right analytical module (compare, breakdown, what changed, summarize, statistical models).
+- 📚 **Semantic Layer** — Configuration via `metrics.yaml` maps abstract business terms (e.g., "revenue" or "churn") to exact column definitions, ensuring consistent results across all queries.
+- 🔍 **Source Transparency** — Every answer shows exactly which columns and filters produced it, building trust.
+- ⏳ **Ambiguity Resolution** — Vague phrases like "this month" and "last week" are instantly resolved to concrete date ranges before analysis begins.
+- 🧮 **Data Science Agents** — Deep analytical operations including anomaly detection (Z-score, IQR, Isolation Forest), time-series forecasting (ARIMA), and customer segmentation (KMeans).
+- 📊 **Auto Chart Selection** — Automatically picks the right chart type (bar, line, scatter, pie) based on the shape of the result and returns an embedded Base64 image.
+- 🛡️ **PII Safety Layer** — Raw sensitive data (customer IDs, emails) is automatically sanitized and never exposed to the LLM or returned to the user.
+- 🔐 **Code Safety Guard** — All LLM-generated Python code for dataset analysis is statically scanned for dangerous patterns before safe execution.
+- 🐳 **Docker & Hugging Face Ready** — Fully dockerized with an unprivileged user setup, ready for instant deployment to Hugging Face Spaces (Port 7860).
 
 ---
 
-## Install and run
+## 🛠️ Tech Stack
+
+- **Backend:** Python 3.10+, FastAPI, Uvicorn, SQLAlchemy
+- **AI / LLM:** Google Gemini (Flash-Lite Preview), LangChain
+- **Data Processing:** Pandas, NumPy
+- **Data Science:** scikit-learn (Isolation Forest, KMeans), statsmodels (ARIMA)
+- **Configuration:** PyYAML (Semantic layer)
+- **Containerization:** Docker
+
+---
+
+## 🚀 Install and Run
 
 ### Prerequisites
 
 - Python 3.10 or higher
-- Node.js 18+ (for the frontend)
-- An API key for your chosen LLM provider (or Ollama installed locally)
+- An API key for Google Gemini (Get a free tier key at [Google AI Studio](https://aistudio.google.com/app/apikey))
+- *Optional:* Docker Desktop
 
 ### 1. Clone the repository
 
-```bash
+```powershell
 git clone <your-repo-url>
-cd talk-to-data
+cd PurposePredict_T2Data
 ```
 
-### 2. Set up the backend
+### 2. Configure Environment
 
-```bash
-cd backend
+Create a `.env` file in the root directory:
+
+```env
+# Required for both dataset and SQL chat modes
+GOOGLE_API_KEY=your-gemini-key-here
+
+# Optional aliases supported by the app
+GEMINI_API_KEY=your-gemini-key-here
+
+# Optional model override
+GOOGLE_MODEL=gemini-2.5-flash-lite-preview
+
+# Optional custom port for local run
+PORT=8000
+```
+
+### 3. Set up locally (Without Docker)
+
+```powershell
+# Create virtual environment and install dependencies
+python -m venv .venv
+.venv\Scripts\activate  # Windows
+# source .venv/bin/activate  # Mac/Linux
+
 pip install -r requirements.txt
+
+# Start the API server
+python main.py
 ```
+The API will be available at `http://localhost:8000`. You can explore all endpoints via the Swagger UI at `http://localhost:8000/docs`.
 
-Copy the environment template and fill in your API key:
+### 4. Run via Docker (Ready for Hugging Face Spaces)
 
-```bash
-cp ../.env.example .env
-# Edit .env and set your LLM_PROVIDER and API key
+```powershell
+# Build the image
+docker build -t talk-to-data-api .
+
+# Run the container locally map port 7860 to 7860
+docker run -p 7860:7860 --env-file .env talk-to-data-api
 ```
-
-Generate the sample dataset:
-
-```bash
-python ../sample_data/generate_data.py
-```
-
-Start the API server:
-
-```bash
-uvicorn main:app --reload --port 8000
-```
-
-The API will be available at `http://localhost:8000`. You can explore all endpoints at `http://localhost:8000/docs`.
-
-### 3. Set up the frontend
-
-```bash
-cd ../frontend
-npm install
-npm run dev
-```
-
-The app will be available at `http://localhost:5173`.
-
-### 4. Using the app
-
-1. Open `http://localhost:5173`
-2. Upload any CSV or Excel file using the sidebar
-3. Ask a question — for example:
-   - *"Why did South region sales drop last month?"*
-   - *"Compare revenue by region"*
-   - *"Are there any unusual spikes in revenue?"*
-   - *"Forecast sales for the next 7 days"*
-   - *"Give me a weekly summary"*
+The API will be automatically accessible on port `7860`.
 
 ---
 
-## LLM configuration
+## 🔌 Comprehensive API Endpoints
 
-Edit `.env` to choose your provider. **Gemini is the default** (free tier available at [aistudio.google.com](https://aistudio.google.com/app/apikey)).
+### 📁 Dataset Chat Mode
 
-**Google Gemini (default)**
-```
-LLM_PROVIDER=google
-GOOGLE_API_KEY=your-key-here
-GOOGLE_MODEL=gemini-1.5-flash
-```
+#### **`POST /upload`**
+Uploads a dataset to be processed in memory.
+- **Input:** `multipart/form-data` with a `.csv` or `.xlsx` file.
+- **Behavior:** Auto-detects schema, handles session creation, applies PII sanitization to previews.
+- **Returns:** `session_id`, filename, row count, column structure, and a safe data preview.
 
-**OpenAI (alternative)**
-```
-LLM_PROVIDER=openai
-OPENAI_API_KEY=your-key-here
-OPENAI_MODEL=gpt-4o-mini
-```
+#### **`POST /query`**
+Ask a natural language question about the uploaded dataset.
+- **Input:** JSON Body `{"session_id": "...", "question": "..."}`
+- **Behavior:** Intent classification -> Agent Routing -> Python Execution -> Chart Generation.
+- **Returns:** `answer` (plain English), `chart` (containing `image_b64` Base64 PNG), `source_ref` (columns utilized), and tabular `data`.
 
-**Ollama (fully local, no API key needed)**
-```bash
-ollama serve
-ollama pull llama3.1:8b
-```
-```
-LLM_PROVIDER=ollama
-OLLAMA_MODEL=llama3.1:8b
-```
+#### **`GET /chart/{session_id}/latest.png`**
+Helper endpoint to render the natively generated PNG directly via an `<img src="...">` tag without managing base64 natively.
 
 ---
 
-## Running tests
+### 🗄️ Database Speaks Mode
 
-```bash
-cd talk-to-data
-python -m pytest tests/ -v
-```
-
-**74 tests** covering the semantic layer, DS agents (anomaly detection, forecasting, clustering), intent classification, safety layer, and schema registry.
+#### **`POST /db/chat`**
+Execute conversational natural language over a live MySQL Database (Powered by LangChain SQL Toolkit).
+- **Input:** JSON Body
+  ```json
+  {
+    "query": "Who are the top 10 customers by total spend in 2025?",
+    "mysql_host": "localhost",
+    "mysql_user": "root",
+    "mysql_password": "your-password",
+    "mysql_db": "sales_db",
+    "mysql_port": "3306"
+  }
+  ```
+- **Behavior:** Securely communicates with the database using SQL tooling, executes queries in the background, checks errors, automatically corrects failed queries, and sets a context-bearing HTTP-only Cookie (`db_chat_session_id`) to retain follow-up conversational history!
+- **Returns:** Plain-text SQL agent `response`, generated `session_id`, and `success` boolean.
 
 ---
 
-## Project structure
+### ⚙️ Utility Endpoints
 
-```
-talk-to-data/
-├── backend/
-│   ├── main.py                        # FastAPI app — /upload, /query endpoints
-│   ├── agents/
-│   │   ├── orchestrator.py            # Intent classifier + agent router
-│   │   ├── analyst_agent.py           # Core analyst — wraps ai-data-science-team
-│   │   ├── ds_agent.py                # Anomaly detection, forecasting, clustering
-│   │   ├── viz_agent.py               # Auto chart-type selection
-│   │   └── summarizer.py              # Plain-English answers + source refs
-│   ├── core/
-│   │   ├── semantic_layer.py          # metrics.yaml loader + query enrichment
-│   │   ├── schema_registry.py         # Column/type/sample extraction
-│   │   ├── session.py                 # Per-user dataframe + chat history
-│   │   └── safety.py                  # PII guard + code safety checker
-│   ├── config/
-│   │   └── metrics.yaml               # Business term → column definitions
-│   └── requirements.txt
-├── frontend/
-│   └── src/
-│       ├── App.jsx
-│       └── components/
-│           ├── ChatWindow.jsx
-│           ├── UploadPanel.jsx
-│           ├── ChartCard.jsx
-│           └── SourcePanel.jsx
-├── sample_data/
-│   ├── generate_data.py               # Generates sales_data.csv
-│   └── sales_data.csv                 # 2000-row demo dataset
-├── tests/
-│   ├── test_ds_agent.py
-│   ├── test_semantic_layer.py
-│   ├── test_orchestrator_safety.py
-│   └── test_schema_registry.py
-├── pytest.ini
-├── .env.example
-└── README.md
+- **`GET /health`**: Health check, confirming the configured Gemini LLM and active features.
+- **`GET /session/{session_id}`**: Validates if a dataset session exists and how many chunks of history it holds.
+- **`GET /metrics`**: Serves all global semantic layer definitions mapped inside `config/metrics.yaml`.
+
+---
+
+## 🏗️ Project Structure
+
+```text
+PurposePredict_T2Data/
+├── main.py                        # FastAPI / Uvicorn app entry point
+├── Dockerfile                     # Unprivileged Docker configuration (Port 7860)
+├── requirements.txt               # Python dependencies
+├── agents/                        
+│   ├── orchestrator.py            # Intent classifier + agent router
+│   ├── analyst_agent.py           # Core Pandas analyst — generates analysis code
+│   ├── ds_agent.py                # Statistical & Data Science logic
+│   ├── summarizer.py              # LLM plain-English aggregation
+│   └── viz_agent.py               # Auto chart-type selection & formatting
+├── core/
+│   ├── semantic_layer.py          # metrics.yaml query enrichment
+│   ├── schema_registry.py         # Column/type/sample extraction
+│   ├── session.py                 # Multi-user session & state management
+│   └── safety.py                  # PII guard + code safety sandbox checker
+├── config/
+│   └── metrics.yaml               # Business term → column definitions
+└── README.md                      # Documentation
 ```
 
 ---
 
-## Architecture
+## 🧠 Architecture Overview
 
+### Seamless Agent Pipeline
+```mermaid
+User Question
+      ↓
+(If db/chat) ──>  LangChain SQL Agent ──> Query MySQL DB ──> Respond
+      ↓
+(If dataset)
+Semantic Layer  →  Enriches query with specific metric definitions from `config/metrics.yaml`
+      ↓
+Orchestrator    →  Classifies intent (Compare / Breakdown / Trend / Summarize / Statistical Models)
+      ↓
+Analyst Agent   →  LLM generates Python/Pandas code → Scanned for security → Executes on in-memory DataFrame
+      ↓              (or DS Agent triggers anomaly / forecast / clustering operations)
+Summarizer      →  Ingests raw numerical outputs into plain English + appends source reference filters
+      ↓
+Viz Agent       →  Selects optimal chart structure → Returns visual Plotly/Matplotlib buffer mapped to Base64
+      ↓
+Frontend Response
 ```
-User question
-     ↓
-Semantic Layer  →  enriches query with metric definitions from metrics.yaml
-     ↓
-Orchestrator    →  classifies intent (compare / breakdown / what changed / summarise / DS)
-     ↓
-Analyst Agent   →  LLM generates Python/Pandas code → executes in sandbox → returns results
-     ↓              (or DS Agent for anomaly / forecast / cluster)
-Summarizer      →  turns raw numbers into plain English + appends source reference
-     ↓
-Viz Agent       →  picks chart type from result shape → returns Plotly spec
-     ↓
-Frontend        →  renders answer + chart + source panel
-```
+
+### Architecture Deep Dive
+
+**1. Semantic layer (`metrics.yaml`)**:
+The core contextual differentiator. Every business term a user might type — "revenue", "sales", "turnover", "churn" — is strictly mapped to exact columns, filters, and aggregation algorithms. This ensures "revenue" *always* signifies completed transactions, preventing disparate answers based on how a question is worded.
+
+**2. Dual Analysis Path**:
+Use Pandas-centric dynamic memory execution for quick uploaded CSVs, or hook directly into live production relational tables via the specialized `SQLDatabaseToolkit` using LangChain.
+
+**3. Data Privacy & Safety First**:
+- **Sandbox execution:** Generated pandas code is subjected to strict rule-matching. Python internals like `os`, `exec`, network modules, or file path reads are immediately blocked from executing.
+- **PII Concealment:** The LLM never visually touches raw sensitive details. Any detected customer IDs, granular emails, or sensitive texts are scrubbed via PII hashing before sending snippets outside the server.
 
 ---
 
-## Architecture notes
+## 🧱 Limitations
 
-**Semantic layer (`metrics.yaml`)** is the core differentiator. Every business term a user might type — "revenue", "sales", "turnover", "churn" — is mapped to the exact column, filter, and aggregation method. This ensures "revenue" always means completed transactions, not gross amounts, regardless of who asks or how they phrase it.
-
-**No SQL.** The system works entirely with Pandas on uploaded CSV/Excel files. SQL is unnecessary overhead when data comes from user uploads rather than a production database.
-
-**PII safety.** The LLM never sees raw customer data. The safety layer strips PII columns (customer IDs, emails, etc.) before any result passes to the LLM or is returned to the user. Datasets with more than 50 rows are summarised rather than returned raw.
-
-**Code safety.** All Python code generated by the LLM is scanned for dangerous patterns (`os`, `subprocess`, `eval`, `exec`, file access, network calls) before execution.
+- The semantic layer (`metrics.yaml`) requires manual adjustments if the connected dataset changes primary foundational column names.
+- Statistical forecasting (ARIMA) produces optimal confidence bounds when evaluating >30 distinct time series data intervals.
+- Session constraints are entirely in-memory and bound by the application process lifecycle (Non-persistent on restarts/Docker container redeploys).
 
 ---
 
-## Limitations
+## 🔮 Future Roadmap
 
-- The semantic layer (`metrics.yaml`) must be manually updated if the dataset has different column names from the defaults
-- Forecasting works best with at least 30 data points in the time series
-- The LLM fallback analyst agent requires a capable model (GPT-4o-mini or better) for reliable code generation
-- Session data is stored in memory and lost on server restart (no persistent storage in this prototype)
-
----
-
-## Future improvements
-
-- Persistent storage for sessions (Redis or SQLite)
-- Auto-discovery of column semantics from data samples
-- Multi-dataset joins and cross-dataset queries
-- User-editable metric definitions through the UI
-- Streaming responses for faster perceived speed
-- Role-based access control for sensitive datasets
+- Expand Data Science Agents to operate effectively against raw MySQL Queries.
+- Enable cross-document operations, joining 2+ distinct dataset files on implicit keys.
+- Integrate Redis for High Availability sticky sessions.
+- Automatically auto-discover semantic definitions based on deep structural dataset scanning.
+- Integrate role-based security & JWT OAuth flow for DB connections.
 
 ---
 
-## Open-source compliance
+## 📝 License & Open-source Compliance
 
-This project uses the following open-source libraries under their respective licences:
+This project is licensed under the **Apache License 2.0**.
+- Complete License text provided in the `LICENSE` file.
+- Attribution notices available in `NOTICE`.
 
-- `ai-data-science-team` — MIT
-- `langchain` — MIT
-- `fastapi` — MIT
-- `pandas`, `numpy`, `scikit-learn`, `statsmodels` — BSD
-- `pyyaml` — MIT
-
-All commits are signed off with `git commit -s` in compliance with the Developer Certificate of Origin (DCO). A single email address is used for all commits and hackathon communication.
+It leverages several exceptional libraries under permissive OSS licenses:
+- `langchain` / `fastapi` / `pyyaml` — MIT
+- `pandas` / `numpy` / `scikit-learn` / `statsmodels` — BSD

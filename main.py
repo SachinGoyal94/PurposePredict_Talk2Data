@@ -4,6 +4,7 @@ main.py — FastAPI entry point
 Endpoints:
   POST /upload          Upload CSV/Excel → session_id + schema
   POST /query           NL question → answer + chart image (base64) + source ref
+  POST /db/chat         NL question → SQL agent response from MySQL
   GET  /health          Health check
   GET  /session/{id}    Session info
   GET  /metrics         All metric definitions
@@ -11,13 +12,18 @@ Endpoints:
 import os
 import io
 import base64
+from urllib.parse import quote_plus
 from pathlib import Path
 import pandas as pd
-from fastapi import FastAPI, UploadFile, File, HTTPException
+from fastapi import FastAPI, UploadFile, File, HTTPException, Request, Response as ApiResponse
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import Response
 from pydantic import BaseModel
 from typing import Optional
+from sqlalchemy import create_engine
+from langchain_community.agent_toolkits import create_sql_agent
+from langchain_community.agent_toolkits.sql.toolkit import SQLDatabaseToolkit
+from langchain_community.utilities.sql_database import SQLDatabase
 
 from core.session import get_session_store
 from core.schema_registry import get_schema_registry
@@ -31,8 +37,8 @@ load_dotenv(Path(__file__).resolve().with_name(".env"))
 
 app = FastAPI(
     title="Talk to Data API",
-    description="Conversational data analyst agent — NatWest Code for Purpose Hackathon",
-    version="1.0.0",
+    description="Talk to datasets and SQL databases with natural language",
+    version="1.1.0",
 )
 
 app.add_middleware(
@@ -47,7 +53,7 @@ def get_llm():
     """Initialise Gemini LLM via LangChain."""
     from langchain_google_genai import ChatGoogleGenerativeAI
 
-    api_key = os.getenv("GOOGLE_API_KEY") or os.getenv("GEMINI_API_KEY")
+    api_key = os.getenv("GOOGLE_API_KEY") or os.getenv("GEMINI_API_KEY") or os.getenv("GEMINI_KEY")
     if not api_key:
         raise RuntimeError(
             "Gemini API key not found. Set GOOGLE_API_KEY or GEMINI_API_KEY in .env or your environment."
@@ -100,6 +106,126 @@ class QueryResponse(BaseModel):
     session_id: str
 
 
+class DatabaseChatRequest(BaseModel):
+    query: str
+    mysql_host: str | None = None
+    mysql_user: str | None = None
+    mysql_password: str | None = None
+    mysql_db: str | None = None
+    mysql_port: str | None = None
+
+
+class DatabaseChatResponse(BaseModel):
+    success: bool
+    session_id: str
+    query: str
+    response: str
+
+
+def configure_db(req: DatabaseChatRequest) -> SQLDatabase:
+    required = [req.mysql_host, req.mysql_user, req.mysql_password, req.mysql_db]
+    if not all(required):
+        raise HTTPException(status_code=400, detail="Missing MySQL connection parameters.")
+
+    port = req.mysql_port or "3306"
+    user = quote_plus(req.mysql_user or "")
+    password = quote_plus(req.mysql_password or "")
+    host = req.mysql_host
+    db_name = req.mysql_db
+    conn_str = f"mysql+mysqlconnector://{user}:{password}@{host}:{port}/{db_name}"
+
+    try:
+        return SQLDatabase(create_engine(conn_str))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"MySQL connection failed: {e}")
+
+
+def get_sql_agent(db: SQLDatabase):
+    try:
+        toolkit = SQLDatabaseToolkit(db=db, llm=_llm)
+        base_kwargs = {
+            "llm": _llm,
+            "toolkit": toolkit,
+            "verbose": True,
+            "handle_parsing_errors": True,
+            "top_k": 20,
+            "max_iterations": 30,
+            "max_execution_time": 30,
+            "early_stopping_method": "force",
+        }
+        try:
+            return create_sql_agent(agent_type="tool-calling", **base_kwargs)
+        except TypeError:
+            # Backward compatibility for older LangChain versions.
+            return create_sql_agent(**base_kwargs)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Agent setup failed: {e}")
+
+
+def _extract_agent_answer(result) -> str:
+    import ast
+    import re
+
+    out = result.get("output", "") if isinstance(result, dict) else result
+
+    if isinstance(out, str):
+        # If the output string is a stringified raw dictionary/list from the LLM, 
+        # normally happens when the agent uses force early_stopping and truncates.
+        if out.strip().startswith("[{") and ("'text'" in out or '"text"' in out):
+            try:
+                out = ast.literal_eval(out)
+            except Exception:
+                # Handle malformed/truncated stringified lists
+                matches = re.findall(r"['\"]text['\"]\s*:\s*(['\"])(.*?)\1(?:,|\})", out)
+                if matches:
+                    # match is a tuple (quote_char, text_content)
+                    return "\n".join(m[1].replace("\\n", "\n") for m in matches)
+                return out
+
+    if isinstance(out, list):
+        extracted = []
+        for item in out:
+            if isinstance(item, dict) and "text" in item:
+                extracted.append(item["text"])
+            elif hasattr(item, "text"):
+                extracted.append(item.text)
+            else:
+                extracted.append(str(item))
+        return "\n".join(extracted)
+
+    return str(out)
+
+
+def _is_output_parsing_error(err: Exception) -> bool:
+    msg = str(err)
+    lowered = msg.lower()
+    return (
+        "output_parsing_failure" in lowered
+        or "could not parse llm output" in lowered
+        or "output parsing error" in lowered
+    )
+
+
+def run_sql_agent_with_retry(agent, agent_input: str, plain_query: str) -> str:
+    try:
+        return _extract_agent_answer(agent.invoke({"input": agent_input}))
+    except AttributeError:
+        return _extract_agent_answer(agent.run(agent_input))
+    except Exception as first_error:
+        if not _is_output_parsing_error(first_error):
+            raise
+
+        retry_input = (
+            "Answer this database question using SQL tools. "
+            "Return only the final answer text.\n"
+            f"Question: {plain_query}"
+        )
+        try:
+            return _extract_agent_answer(agent.invoke({"input": retry_input}))
+        except AttributeError:
+            return _extract_agent_answer(agent.run(retry_input))
+
+
 # ── Endpoints ─────────────────────────────────────────────────────────────────
 
 @app.get("/health")
@@ -107,6 +233,15 @@ def health():
     return {
         "status": "ok",
         "model":  os.getenv("GOOGLE_MODEL", "gemini-2.5-flash-lite-preview"),
+        "features": ["talk_to_dataset", "talk_to_database_sql"],
+    }
+
+
+@app.get("/")
+def root():
+    return {
+        "message": "Welcome to Talk to Data API",
+        "features": ["talk_to_dataset", "talk_to_database_sql"],
     }
 
 
@@ -207,6 +342,51 @@ async def query(request: QueryRequest):
     )
 
 
+@app.post("/db/chat", response_model=DatabaseChatResponse)
+def chat_with_database(req: DatabaseChatRequest, request: Request, response: ApiResponse):
+    try:
+        store = get_session_store()
+        cookie_session_id = request.cookies.get("db_chat_session_id")
+        session = store.get_or_create(cookie_session_id)
+
+        db = configure_db(req)
+        agent = get_sql_agent(db)
+
+        history_text = session.get_db_history_text(last_n=8)
+        if history_text:
+            agent_input = (
+                "Use the recent conversation context for follow-up SQL questions when relevant.\n"
+                f"{history_text}\n"
+                f"USER: {req.query}"
+            )
+        else:
+            agent_input = req.query
+
+        session.add_db_message("user", req.query)
+
+        answer = run_sql_agent_with_retry(agent, agent_input=agent_input, plain_query=req.query)
+
+        session.add_db_message("assistant", answer)
+
+        response.set_cookie(
+            key="db_chat_session_id",
+            value=session.session_id,
+            httponly=True,
+            samesite="lax",
+        )
+
+        return DatabaseChatResponse(
+            success=True,
+            session_id=session.session_id,
+            query=req.query,
+            response=answer,
+        )
+    except HTTPException as e:
+        raise e
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Unexpected error: {e}")
+
+
 @app.get("/chart/{session_id}/latest.png")
 async def get_latest_chart_image(session_id: str):
     """
@@ -251,3 +431,10 @@ def get_metrics():
     """
     sl = get_semantic_layer()
     return {"metrics": sl.get_metric_definitions()}
+
+if __name__ == "__main__":
+    import uvicorn
+    # Default port 7860 is commonly used on Hugging Face Spaces
+    port = int(os.environ.get("PORT", 7860))
+    uvicorn.run("main:app", host="0.0.0.0", port=port)
+
