@@ -92,7 +92,7 @@ GOOGLE_API_KEY=your-gemini-key-here
 GEMINI_API_KEY=your-gemini-key-here
 
 # Optional model override
-GOOGLE_MODEL=gemini-2.5-flash-lite-preview
+GOOGLE_MODEL=gemini-3.1-flash-lite-preview
 
 # Optional custom port for local run
 PORT=8000
@@ -203,7 +203,7 @@ PurposePredict_T2Data/
 ## 🧠 Architecture Overview
 
 ### Seamless Agent Pipeline
-```mermaid
+```text
 User Question
       ↓
 (If db/chat) ──>  LangChain SQL Agent ──> Query MySQL DB ──> Respond
