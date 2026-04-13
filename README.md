@@ -54,6 +54,18 @@ The system is built around a **multi-agent data analyst pipeline** that understa
 
 ---
 
+## 🖼️ Sample Outputs
+
+Here are some examples of the system in action:
+
+**Dataset Mode Analysis:**
+![Dataset Output](sample_outputs/dataset_output.jpeg)
+
+**Database SQL Mode Analysis:**
+![SQL Output](sample_outputs/sql_output.jpeg)
+
+---
+
 ## 🛠️ Tech Stack
 
 - **Backend:** Python 3.10+, FastAPI, Uvicorn, SQLAlchemy
